@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import numeral from 'numeral';
+import { Alert,Button,FormGroup,InputGroup,FormControl,Form,Col,ControlLabel } from 'react-bootstrap/lib';
 
 
 class RegCFLimitApp extends React.Component {
@@ -20,7 +21,7 @@ class RegCFLimitApp extends React.Component {
     handleChange(event) {
         const amount = event.target.value;
 
-        if (!amount || amount.match(/^\d{1,}(\.\d{0,2})?$/)) {
+        if (!amount || amount.match(/^\d{1,}?$/)) {
             this.setState({
                 [event.target.name]: event.target.value
             });
@@ -77,35 +78,42 @@ class RegCFLimitApp extends React.Component {
     }   
     render() {
         return (
-            <div>
-            <font color="red">{ this.state.error && 'Please enter both your Salary and Net Worth.' }</font>
-            <form id="cf-limit-calculator" onSubmit={this.handleSubmit} autoComplete="off" >
-                <p>Salary:<input 
-                    type="text" 
-                    name="salary" 
-                    placeholder="e.g. $60,000 as 60000" 
-                    autoFocus
-                    value={this.state.salary} 
-                    onChange={this.handleChange}
-                    step='100' />
-                </p>
-                <p>Net Worth:<input 
-                    type="text" 
-                    name="netWorth" 
-                    placeholder="e.g. $100,000 as 100000" 
-                    value={this.state.netWorth} 
-                    onChange={this.handleChange}
-                    step='100' /></p>
-                <button type="submit">Calculate Limit</button>
-            </form>
-            <p>
-                <strong>
-                    { this.state.yourLimit ? ('Your annual Reg CF investment limit is: ' + numeral(this.state.yourLimit).format('$0,0.00')) : 'Enter values (no commas or $ signs) and click "Calculate Limit"' }
-                </strong>
-            </p>
-            <p>
-                { this.state.isAccredited ? 'Note: you appear to meet the requirements for an Accredited Investor. However, per the JOBS Act Title III laws as of today, you are still limited to the 12-month limit for investing in all Reg CF (Title III) deals at the amount above.' : '' }
-            </p>
+            <div align='center' style={{width: '100%'}} >
+            { this.state.error && <Alert bsStyle="danger" >Please enter your Annual Income and Net Worth. </Alert> }
+            <Form style={{width: '70%', maxWidth:'500px'}} horizontal id="cf-limit-calculator" onSubmit={this.handleSubmit} autoComplete="off" >
+                <FormGroup>
+                    <Col componentClass={ControlLabel} sm={4}>Annual Income:</Col>
+                    <InputGroup>
+                            <InputGroup.Addon>$</InputGroup.Addon>
+                            <FormControl 
+                                type="text" 
+                                name="salary" 
+                                placeholder="Income e.g. $60,000 as 60000" 
+                                autoFocus
+                                value={this.state.salary} 
+                                onChange={this.handleChange}
+                            />
+                            <InputGroup.Addon>.00</InputGroup.Addon>
+                    </InputGroup>
+                    <Col componentClass={ControlLabel} sm={4}>Net Worth:</Col>
+                    <InputGroup> 
+                            <InputGroup.Addon>$</InputGroup.Addon>
+                                <FormControl 
+                                    type="text" 
+                                    name="netWorth" 
+                                    placeholder="Net Worth - e.g. $100,000 as 100000" 
+                                    value={this.state.netWorth} 
+                                    onChange={this.handleChange}
+                                />
+                                <InputGroup.Addon>.00</InputGroup.Addon>  
+                    </InputGroup>
+                    <br />
+                    <Button type="submit" bsStyle="primary">Calculate Your Limit</Button>
+                </FormGroup>
+            </Form>
+            <br />
+                { (!this.state.error && this.state.yourLimit) ? (<Alert bsStyle="success" style={{width: '90%', maxWidth:'500px'}} >Your 12-month Reg CF investment limit is: <br /><strong> {numeral(this.state.yourLimit).format('$0,0.00')} </strong> </Alert> ) : 'Enter values above and click "Calculate Limit"' }
+                { this.state.isAccredited ? <Alert bsStyle="info" style={{width: '90%', maxWidth:'500px'}}>Note: you appear to meet the requirements for an Accredited Investor. However, per the JOBS Act Title III laws as of today, you are still limited to the 12-month limit for investing in all Reg CF (Title III) deals at the amount above.</Alert> : '' }
             </div>
         );
     }

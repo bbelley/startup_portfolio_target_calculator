@@ -1,122 +1,184 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import numeral from 'numeral';
-import { Alert,Button,FormGroup,InputGroup,FormControl,Form,Col,ControlLabel } from 'react-bootstrap/lib';
+import { Alert,Button,FormGroup,InputGroup,FormControl,Form,Col,ControlLabel,Radio } from 'react-bootstrap/lib';
 
 
-class RegCFLimitApp extends React.Component {
+class IRRApp extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            salary: '',
-            netWorth: '',
-            yourLimit: '',
-            isAccredited: false,
+            invTime: '',
+            desiredMult: '',
+            desiredIRR: '',
+            calcIRR: false,
+            calcMult: false,
+            chooseIRR: true,
+            chooseMult: false,
             error: ''
         };
         
         this.handleChange = this.handleChange.bind(this);
+        this.handleRadioChange = this.handleRadioChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
     handleChange(event) {
         const amount = event.target.value;
 
-        if (!amount || amount.match(/^\d{1,}?$/)) {
+        if (!amount || amount.match(/^\d{1,}\.?\d{0,2}?$/)) {
             this.setState({
                 [event.target.name]: event.target.value
             });
         };
     }
+    handleRadioChange(event) {
+        this.setState({
+            chooseIRR: !this.state.chooseIRR,
+            chooseMult: !this.state.chooseMult,
+            calcIRR: false,
+            calcMult: false,
+            desiredMult: '',
+            desiredIRR: ''
+        });
+    }
     handleSubmit(event) {
         event.preventDefault();
-      
-        let invNW = +this.state.netWorth;
-        let invSalary = +this.state.salary;
-        let invLimit = 0;
+        
+        if (this.state.chooseIRR) {
+            let yourMult = +this.state.desiredMult;
+            let yourTime = +this.state.invTime;
 
-        //Check and display Accredited Investor status
-        if (invNW>=1000000 || invSalary>=200000) {
-            this.setState(() => ({isAccredited: true}));
-        } else {
-            this.setState(() => ({isAccredited: false}));
-        };
+            //Calculate IRR 
+            //Equation: IRR=(return_mult)^(1/time)-1
+            let yourIRR = Math.pow(yourMult,(1/yourTime))-1;
+            
+            this.setState(() => {
+                return {
+                    calcIRR: yourIRR*100
+                };
+            });
 
-        const secLimit = 107000; //Used in the limit calculations - may change each year
-
-        //Calculate Reg CF 12-month Limit
-        if (invNW>=secLimit && invSalary>=secLimit) {
-            invLimit = Math.min(.05*invNW,.05*invSalary,107000);
-           
-        } else {
-            invLimit = Math.max(
-                2200,
-                Math.min(.05*invNW,.05*invSalary)
-            );
-        }
-
-        this.setState(() => {
-            return {
-                yourLimit: invLimit
+            //Error Check
+            if (!this.state.desiredMult || !this.state.invTime) {
+                //Return error state
+                this.setState(() => {
+                    return {
+                        error: true
+                    };
+                });
+            } else {
+                this.setState(() => {
+                    return {
+                        error: ''
+                    };
+                });
             };
-        });
-
-        //Error Check
-        if (!this.state.netWorth || !this.state.salary) {
-            //Return error state
-            this.setState(() => {
-                return {
-                    error: true
-                };
-            });
         } else {
+            let yourIRR = +this.state.desiredIRR;
+            let yourTime = +this.state.invTime;
+
+            //Calculate Exit Multiple 
+            //Equation: (IRR+1)^t=return_mult
+            let yourMult = Math.pow((yourIRR/100+1),yourTime);
+            
             this.setState(() => {
                 return {
-                    error: ''
+                    calcMult: yourMult
                 };
             });
+
+            //Error Check
+            if (!this.state.desiredIRR || !this.state.invTime) {
+                //Return error state
+                this.setState(() => {
+                    return {
+                        error: true
+                    };
+                });
+            } else {
+                this.setState(() => {
+                    return {
+                        error: ''
+                    };
+                });
+            };
         };
+
+        
     }   
     render() {
         return (
             <div align='center' style={{width: '100%'}} >
-            { this.state.error && <Alert bsStyle="danger" >Please enter your Annual Income and Net Worth. </Alert> }
-            <Form style={{width: '70%', maxWidth:'500px'}} horizontal id="cf-limit-calculator" onSubmit={this.handleSubmit} autoComplete="off" >
+            { this.state.error && <Alert bsStyle="danger" >Please enter both fields before calculating. </Alert> }
+            <Form style={{width: '70%', maxWidth:'300px'}} horizontal id="irr-calc" onSubmit={this.handleSubmit} autoComplete="off" >
+                <FormGroup>     
+                    <Radio
+                        name="radioGroup" 
+                        //inline 
+                        id="chooseIRR"
+                        defaultChecked={true}
+                        onChange={this.handleRadioChange}
+                    >         
+                        Calculate IRR
+                    </Radio>     
+                    
+                    <Radio 
+                        name="radioGroup" 
+                        //inline 
+                        id="chooseMult" 
+                        onChange={this.handleRadioChange}
+                    >         
+                        Calculate Exit/Return Multiple
+                    </Radio>     
+
+                </FormGroup>
                 <FormGroup>
-                    <Col componentClass={ControlLabel} sm={4}>Annual Income:</Col>
-                    <InputGroup>
-                            <InputGroup.Addon>$</InputGroup.Addon>
-                            <FormControl 
-                                type="text" 
-                                name="salary" 
-                                placeholder="Income e.g. $60,000 as 60000" 
-                                autoFocus
-                                value={this.state.salary} 
-                                onChange={this.handleChange}
-                            />
-                            <InputGroup.Addon>.00</InputGroup.Addon>
-                    </InputGroup>
-                    <Col componentClass={ControlLabel} sm={4}>Net Worth:</Col>
+                    <Col componentClass={ControlLabel} sm={7}>Exit/Return Multiple:</Col>
                     <InputGroup> 
-                            <InputGroup.Addon>$</InputGroup.Addon>
                                 <FormControl 
                                     type="text" 
-                                    name="netWorth" 
-                                    placeholder="Net Worth - e.g. $100,000 as 100000" 
-                                    value={this.state.netWorth} 
+                                    name="desiredMult" 
+                                    placeholder="e.g 3.60"
+                                    autoFocus 
+                                    value={this.state.desiredMult} 
                                     onChange={this.handleChange}
-                                />
-                                <InputGroup.Addon>.00</InputGroup.Addon>  
+                                    disabled={this.state.chooseMult}
+                                /> 
+                                <InputGroup.Addon>X</InputGroup.Addon>
+                    </InputGroup>
+                    <Col componentClass={ControlLabel} sm={7}>IRR: </Col>
+                    <InputGroup>
+                            <FormControl 
+                                type="text" 
+                                name="desiredIRR" 
+                                placeholder="IRR" 
+                                value={this.state.desiredIRR} 
+                                onChange={this.handleChange}
+                                disabled={this.state.chooseIRR}
+                            />
+                            <InputGroup.Addon>%</InputGroup.Addon>
+                    </InputGroup>
+                    <Col componentClass={ControlLabel} sm={7}>Time (years): </Col>
+                    <InputGroup>
+                            <FormControl 
+                                type="text" 
+                                name="invTime" 
+                                placeholder="Years" 
+                                value={this.state.invTime} 
+                                onChange={this.handleChange}
+                            />
+                            <InputGroup.Addon>years</InputGroup.Addon>
                     </InputGroup>
                     <br />
-                    <Button type="submit" bsStyle="primary">Calculate Your Limit</Button>
+                    <Button type="submit" bsStyle="primary">Calculate { (this.state.chooseMult) ? "Return Multiple" : "IRR" }</Button>
                 </FormGroup>
             </Form>
             <br />
-                { (!this.state.error && this.state.yourLimit) ? (<Alert bsStyle="success" style={{width: '90%', maxWidth:'500px'}} >Your 12-month Reg CF investment limit is: <br /><strong> {numeral(this.state.yourLimit).format('$0,0.00')} </strong> </Alert> ) : 'Enter values above and click "Calculate Limit"' }
-                { this.state.isAccredited ? <Alert bsStyle="info" style={{width: '90%', maxWidth:'500px'}}>Note: you appear to meet the requirements for an Accredited Investor. However, per the JOBS Act Title III laws as of today, you are still limited to the 12-month limit for investing in all Reg CF (Title III) deals at the amount above.</Alert> : '' }
+                { (!this.state.error && this.state.calcIRR) ? (<Alert bsStyle="success" style={{width: '90%', maxWidth:'500px'}} >IRR =  <br /><strong> {numeral(this.state.calcIRR).format('0.00')}% </strong> </Alert> ) : 'Enter values above and click "Calculate"' }
+                { (!this.state.error && this.state.calcMult) ? (<Alert bsStyle="success" style={{width: '90%', maxWidth:'500px'}} >Exit/Return Multiple =  <br /><strong> {numeral(this.state.calcMult).format('0.00')} X </strong> </Alert> ) : '' }
             </div>
         );
     }
 }
 
-ReactDOM.render(<RegCFLimitApp />,document.getElementById('app'));
+ReactDOM.render(<IRRApp />,document.getElementById('app'));

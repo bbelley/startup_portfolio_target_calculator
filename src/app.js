@@ -120,4 +120,4 @@ class PortfolioApp extends React.Component {
     }
 }
 
-ReactDOM.render(<PortfolioApp />,document.getElementById('app'));
+ReactDOM.render(<PortfolioApp />,document.getElementById('PortfolioApp'));

@@ -67,7 +67,7 @@ class PortfolioApp extends React.Component {
         return (
             <div align='center' style={{width: '100%'}} >
             { this.state.error && <Alert bsStyle="danger" >Please enter all three input fields before calculating. </Alert> }
-            <Form style={{width: '70%', maxWidth:'300px'}} horizontal id="portfolio-calc" onSubmit={this.handleSubmit} autoComplete="off" >
+            <Form style={{width: '70%', maxWidth:'500px'}} horizontal id="portfolio-calc" onSubmit={this.handleSubmit} autoComplete="off" >
                 <FormGroup>
                     <Col componentClass={ControlLabel} sm={7}>Target Portfolio IRR: </Col>
                     <InputGroup>
